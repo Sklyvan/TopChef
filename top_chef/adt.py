@@ -74,7 +74,7 @@ class Chefs:
             return True
         else:
             loop = 0
-            while loop != len(self.sorted_chefs):
+            while loop != len(self.sorted_chefs)-1:
                 if (self.sorted_chefs[loop]).score < (self.sorted_chefs[loop+1]).score:
                     return False
                 loop += 1
@@ -86,7 +86,7 @@ class Chefs:
 
         for chefPosition in range (1, len(self.sorted_chefs)):
             actualChef = self.sorted_chefs[chefPosition]
-            while chefPosition > 0 and (self.sorted_chefs[chefPosition - 1]).score > actualChef.score:
+            while chefPosition > 0 and (self.sorted_chefs[chefPosition - 1]).score < actualChef.score:
                 self.sorted_chefs[chefPosition] = self.sorted_chefs[chefPosition - 1]
                 chefPosition -= 1
                 self.sorted_chefs[chefPosition] = actualChef
@@ -184,7 +184,7 @@ class Recipes:
             return True
         else:
             loop = 0
-            while loop != len(self.sorted_recipes):
+            while loop != len(self.sorted_recipes)-1:
                 if (self.sorted_recipes[loop]).score < (self.sorted_recipes[loop+1]).score:
                     return False
                 loop += 1
@@ -196,7 +196,7 @@ class Recipes:
 
         for recipePosition in range (1, len(self.sorted_recipes)):
             actualRecipe = self.sorted_recipes[recipePosition]
-            while recipePosition > 0 and (self.sorted_recipes[recipePosition - 1]).score > actualRecipe.score:
+            while recipePosition > 0 and (self.sorted_recipes[recipePosition - 1]).score < actualRecipe.score:
                 self.sorted_recipes[recipePosition] = self.sorted_recipes[recipePosition - 1]
                 recipePosition -= 1
                 self.sorted_recipes[recipePosition] = actualRecipe
@@ -312,7 +312,7 @@ class Reviews:
             return True
         else:
             loop = 0
-            while loop != len(self.sorted_reviews):
+            while loop != len(self.sorted_reviews)-1:
                 if (self.sorted_reviews[loop]).score < (self.sorted_reviews[loop+1]).score:
                     return False
                 loop += 1
@@ -325,7 +325,7 @@ class Reviews:
 
         for reviewPosition in range (1, len(self.sorted_reviews)):
             actualReview = self.sorted_reviews[reviewPosition]
-            while reviewPosition > 0 and (self.sorted_reviews[reviewPosition - 1]).score > actualReview.score:
+            while reviewPosition > 0 and (self.sorted_reviews[reviewPosition - 1]).score < actualReview.score:
                 self.sorted_reviews[reviewPosition] = self.sorted_reviews[reviewPosition - 1]
                 reviewPosition -= 1
                 self.sorted_reviews[reviewPosition] = actualReview
@@ -426,27 +426,90 @@ class TopChef:
 
     def compute_recipes_score(self):
         # Complete this function
+        allReviews = []
         for rev_id in self.reviews.get_ids():
-            continue
+            review = self.reviews.get_review(rev_id)
+            allReviews.append(review)
+
+        recipeIds = self.recipes.get_ids()
+        for recipeId in recipeIds:
+            recipe = self.recipes.get_recipe(recipeId)
+            actualRecipeScores = []
+            actualRecipeId = recipe.id
+
+            for review in allReviews:
+                if review.recipe_id == actualRecipeId:
+                    actualRecipeScores.append(review.score)
+
+            l = len(actualRecipeScores)
+            if l != 0:  # Evitamos una división entre 0.
+                normalizedScore = 0
+                for score in actualRecipeScores:
+                    normalizedScore += score
+                finalScore = normalizedScore / l
+                recipe.add_score(finalScore)
+
         self.normalize_recipes_scores()
 
     def normalize_recipes_scores(self):
-        reviewsIds = self.reviews.get_ids()
-        allReviews = []
-        for reviewId in reviewsIds:
-            review = self.reviews.get_review(reviewId)
-            print(review.score,review.recipe_id)
-            allReviews.append(review)
+        recipeIds = self.recipes.get_ids()
+        maxRawScore = None
+        minRawScore = None
+        for recipeId in recipeIds:
+            recipe = self.recipes.get_recipe(recipeId)
+            try:
+                if recipe.score > maxRawScore:
+                    maxRawScore = recipe.score
+                if recipe.score < minRawScore:
+                    minRawScore = recipe.score
+            except:
+                maxRawScore = recipe.score
+                minRawScore = recipe.score
 
+        for recipeId in recipeIds:
+            recipe = self.recipes.get_recipe(recipeId)
+            rawScore = recipe.score
+            normScore = (rawScore - minRawScore) / (maxRawScore - minRawScore)
 
     def compute_chefs_score(self):
-        # Complete this function
+        allRecipes = []
         for rec_id in self.recipes.get_ids():
-            continue
+            recipe = self.recipes.get_recipe(rec_id)
+            allRecipes.append(recipe)
+
+        chefIds = self.chefs.get_ids()
+        for chefId in chefIds:
+            chef = self.chefs.get_chef(chefId)
+            actualChefScores = []
+            actualChefId = chef.id
+
+            for recipe in allRecipes:
+                if recipe.chef_id == actualChefId:
+                    actualChefScores.append(recipe.score)
+
+            l = len(actualChefScores)
+            if l != 0:
+                normalizedScore = 0
+                for score in actualChefScores:
+                    normalizedScore += score
+                finalScore = normalizedScore / l
+                chef.add_score(finalScore)
+
 
     def normalize_chefs_scores(self):
-        # Complete this function
-        pass
+        chefIds = self.chefs.get_ids()
+        maxRawScore = None
+        minRawScore = None
+        for chefId in chefIds:
+            chef = self.chefs.get_chef(chefId)
+            try:
+                if chef.score > maxRawScore:
+                    maxRawScore = chef.score
+                if chef.score < minRawScore:
+                    minRawScore = chef.score
+            except:
+                maxRawScore = chef.score
+                minRawScore = chef.score
 
     def sort_structures(self):
         self.chefs.sort_chefs()
@@ -454,25 +517,40 @@ class TopChef:
         self.reviews.sort_reviews()
 
     def get_top_n_chefs(self, n=1):
-        # Complete this function
-        return None
+        if self.chefs.is_sorted():
+            nChefs = self.chefs.get_top_n(n)
+        else:
+            self.sort_structures()
+            nChefs = self.chefs.get_top_n(n)
+
+        return nChefs
 
     def get_top_n_recipes(self, n=1):
-        # Complete this function
-        return None
+        if self.recipes.is_sorted():
+            nRecipes = self.recipes.get_top_n(n)
+        else:
+            self.sort_structures()
+            nRecipes = self.recipes.get_top_n(n)
+
+        return nRecipes
 
     def get_top_n_reviews(self, n=1):
-        # Complete this function
-        return None
+        if self.reviews.is_sorted():
+            nReviews = self.recipes.get_top_n(n)
+        else:
+            self.sort_structures()
+            nReviews = self.reviews.get_top_n(n)
+
+        return nReviews
 
     def show_chefs(self, chefs):
-        # Complete this function
-        pass
+        for chef in chefs:
+            print(chef)
 
     def show_recipes(self, recipes):
-        # Complete this function
-        pass
+        for recipe in recipes:
+            print(recipe)
 
     def show_reviews(self, reviews):
-        # Complete this function
-        pass
+        for review in reviews:
+            print(review)
