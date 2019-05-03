@@ -54,14 +54,14 @@ class Chefs:
         return chefsIds
 
     def add_chef(self, name, restaurant):
-        if len(self.chefs) == 0:
+        if len(self.chefs) == 0: # Si no hay ningún Chef añadido, ese Chef será el primero y por tanto la ID será 1.
             id = 1
         else:
-            for chefID in self.chefs:
+            for chefID in self.chefs: # Para generar la ID que toca, vamos al último Chef de la lista y le sumamos uno a su ID.
                 continue
             id = chefID+1
-        NewChef = Chef(id, name, restaurant)
-        self.chefs[id] = NewChef
+        NewChef = Chef(id, name, restaurant) # Una vez se tienen los datos necesarios, creamos un objeto de la clase Chef.
+        self.chefs[id] = NewChef # Añadimos el Chef en el diccionario, la clave es la ID y el valor el Chef como objeto.
 
         return NewChef
 
@@ -70,21 +70,21 @@ class Chefs:
         return chef
 
     def is_sorted(self):
-        if len(self.sorted_chefs) == 0 or len(self.sorted_chefs) == 1:
+        if len(self.sorted_chefs) == 0 or len(self.sorted_chefs) == 1: # Si la lista está vacía o solo hay un elemento, podemos asegurar que está ordenada.
             return True
         else:
             loop = 0
-            while loop != len(self.sorted_chefs)-1:
+            while loop != len(self.sorted_chefs)-1: # Vamos a recorrer la lista y comparar un elemento con su siguiente, si vemos que el incial tiene una puntuación menor que el siguiente, podemos asegurar que no está ordenada.
                 if (self.sorted_chefs[loop]).score < (self.sorted_chefs[loop+1]).score:
                     return False
                 loop += 1
-            return True
+            return True # Si llegamos aquí, no se ha hecho el 'Return', por tanto la lista está ordenada.
 
     def sort_chefs(self):
         for chefObject in self.chefs.values():
-            self.sorted_chefs.append(chefObject)
+            self.sorted_chefs.append(chefObject) # Primero añadimos los elementos a la lista sin ordenar.
 
-        for chefPosition in range (1, len(self.sorted_chefs)):
+        for chefPosition in range (1, len(self.sorted_chefs)): # Aplicamos el algoritmo InsertionSort.
             actualChef = self.sorted_chefs[chefPosition]
             while chefPosition > 0 and (self.sorted_chefs[chefPosition - 1]).score < actualChef.score:
                 self.sorted_chefs[chefPosition] = self.sorted_chefs[chefPosition - 1]
@@ -95,7 +95,7 @@ class Chefs:
 
     def get_top_n(self, n=1):
         topChefs = []
-        for i in range (n):
+        for i in range (n): # Como aquí ya tenemos la lista ordenada, simplemente recorremos esa lista elemento a elemento, tantas veces como se nos pida.
             chef = self.sorted_chefs[i]
             topChefs.append(chef)
         return topChefs
@@ -147,7 +147,7 @@ class Recipe:
 
 # Structure to hold the recipes
 class Recipes:
-    def __init__(self):
+    def __init__(self): # Funciona exactamente igual que la clase 'Chefs'.
         self.recipes = {}
         self.next_recipe = 0
         self.sorted_recipes = []
@@ -254,7 +254,7 @@ class Review:
 
 # Structure to hold the reviews
 class Reviews:
-    def __init__(self):
+    def __init__(self): # Funciona exactamente igual que la clase 'Chefs'.
         self.reviews = {}
         self.next_review = 0
         self.sorted_reviews = []
@@ -357,21 +357,21 @@ class TopChef:
     def load_data(self, path):
         chefs = self.chefs
         recipes = self.recipes
-        reviiews = self.reviews
-        dataFile = open(path, "r")
-        for fileLine in dataFile:
-            fileLine = fileLine.replace("\n","")
-            fileContent = fileLine.split("\t")
-            if fileContent[0] == "CHEF":
+        reviews = self.reviews
+        dataFile = open(path, "r") # Abrimos el archivo que contiene los Chefs, Recetas y Reviews.
+        for fileLine in dataFile: # Recorremos el archivo línea a línea.
+            fileLine = fileLine.replace("\n","") # Eliminamos si hay un salto de línea.
+            fileContent = fileLine.split("\t") # Separamos los elementos de cada línea mediante la tabulación.
+            if fileContent[0] == "CHEF": # Si tenemos un Chef, crearemos un objeto de esa clase con la información que nos ha dado el archivo.
                 chefs.add_chef(fileContent[1], fileContent[2])
                 chefsIds = chefs.get_ids()
-                chefId = chefsIds[-1]
-            elif fileContent[0] == "COURSE":
+                chefId = chefsIds[-1] # Guardamos la ID de ese chef para asociar luego sus recetas.
+            elif fileContent[0] == "COURSE": # Si tenemos una receta, crearemos un objeto de esa clase con la información que nos ha dado el archivo.
                 recipes.add_recipe(chefId, fileContent[1])
                 recipesIds = recipes.get_ids()
-                recipeId = recipesIds[-1]
+                recipeId = recipesIds[-1] # Guardamos la ID de esa receta para asociar luego sus reviews.
             else:
-                reviiews.add_review(recipeId, fileContent[0])
+                reviews.add_review(recipeId, fileContent[0]) # Si no nos indica nada, es una review.
         dataFile.close()
 
     def clear(self):
@@ -394,22 +394,22 @@ class TopChef:
         self.compute_chefs_score()
 
     def compute_reviews_score(self, word_dict):
-        for rev_id in self.reviews.get_ids():
+        for rev_id in self.reviews.get_ids(): # Vamos a ir obteniendo todas las reviews.
             review = self.reviews.get_review(rev_id)
             reviewString = review.review
-            reviewString = reviewString.split(" ")
-            for reviewWord in reviewString:
+            reviewString = reviewString.split(" ") # Queremos analizar las palabras de esa review, por tanto añadimos cada palabra en la lista.
+            for reviewWord in reviewString: # Recorreremos cada palabra para eliminar si hay algún signo de puntuación, y transformar a minúsculas.
                 reviewWord = reviewWord.replace(",", "")
                 reviewWord = reviewWord.replace(".", "")
                 reviewWord = reviewWord.replace(";", "")
                 reviewWord = reviewWord.replace("!", "")
                 reviewWord = reviewWord.replace("?", "")
                 reviewWord = reviewWord.lower()
-                if reviewWord in word_dict.get_words():
+                if reviewWord in word_dict.get_words(): # Si esa palabra está en el diccionario de palabras, buscamos la puntuación de esa palabra y se la añadimos a la review.
                     addingScore = word_dict.get_value(reviewWord)
                     review.score += addingScore
 
-        self.normalize_reviews_scores()
+        self.normalize_reviews_scores() # Vamos a normalizar las puntuaciones de cada review.
 
     def normalize_reviews_scores(self):
         minRawScore = self.reviews.min_score()
@@ -417,7 +417,7 @@ class TopChef:
         allReviews = self.reviews
         reviewsIds = allReviews.get_ids()
 
-        for reviewId in reviewsIds:
+        for reviewId in reviewsIds: # Recorremos cada review y calculamos su puntuación normalizada, y la substituïmos por la antigua.
             actualReview = allReviews.get_review(reviewId)
             rawScore = actualReview.score
             normScore = (rawScore - minRawScore) / (maxRawScore - minRawScore)
@@ -425,7 +425,6 @@ class TopChef:
 
 
     def compute_recipes_score(self):
-        # Complete this function
         allReviews = []
         for rev_id in self.reviews.get_ids():
             review = self.reviews.get_review(rev_id)
@@ -517,40 +516,58 @@ class TopChef:
         self.reviews.sort_reviews()
 
     def get_top_n_chefs(self, n=1):
-        if self.chefs.is_sorted():
-            nChefs = self.chefs.get_top_n(n)
-        else:
-            self.sort_structures()
-            nChefs = self.chefs.get_top_n(n)
+        try:
+            if self.chefs.is_sorted():
+                nChefs = self.chefs.get_top_n(n)
+            else:
+                self.sort_structures()
+                nChefs = self.chefs.get_top_n(n)
+            return nChefs
 
-        return nChefs
+        except IndexError:
+            return False
 
     def get_top_n_recipes(self, n=1):
-        if self.recipes.is_sorted():
-            nRecipes = self.recipes.get_top_n(n)
-        else:
-            self.sort_structures()
-            nRecipes = self.recipes.get_top_n(n)
+        try:
+            if self.recipes.is_sorted():
+                nRecipes = self.recipes.get_top_n(n)
+            else:
+                self.sort_structures()
+                nRecipes = self.recipes.get_top_n(n)
+            return nRecipes
 
-        return nRecipes
+        except IndexError:
+            return False
 
     def get_top_n_reviews(self, n=1):
-        if self.reviews.is_sorted():
-            nReviews = self.recipes.get_top_n(n)
-        else:
-            self.sort_structures()
-            nReviews = self.reviews.get_top_n(n)
+        try:
+            if self.reviews.is_sorted():
+                nReviews = self.recipes.get_top_n(n)
+            else:
+                self.sort_structures()
+                nReviews = self.reviews.get_top_n(n)
+            return nReviews
 
-        return nReviews
+        except IndexError:
+            return False
 
     def show_chefs(self, chefs):
-        for chef in chefs:
-            print(chef)
+        if not chefs:
+            print("Wrong input!")
+        else:
+            for chef in chefs:
+                print(chef)
 
     def show_recipes(self, recipes):
-        for recipe in recipes:
-            print(recipe)
+        if not recipes:
+            print("Wrong input!")
+        else:
+            for recipe in recipes:
+                print(recipe)
 
     def show_reviews(self, reviews):
-        for review in reviews:
-            print(review)
+        if not reviews:
+            print("Wrong input!")
+        else:
+            for review in reviews:
+                print(review)
