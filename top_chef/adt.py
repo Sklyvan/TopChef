@@ -553,21 +553,21 @@ class TopChef:
 
     def show_chefs(self, chefs):
         if not chefs:
-            print("Wrong input!")
+            raise TopChefException
         else:
             for chef in chefs:
                 print(chef)
 
     def show_recipes(self, recipes):
         if not recipes:
-            print("Wrong input!")
+            raise TopChefException
         else:
             for recipe in recipes:
                 print(recipe)
 
     def show_reviews(self, reviews):
         if not reviews:
-            print("Wrong input!")
+            raise TopChefException
         else:
             for review in reviews:
                 print(review)
