@@ -74,7 +74,8 @@ class Chefs:
             return True
         else:
             loop = 0
-            while loop != len(self.sorted_chefs)-1: # Vamos a recorrer la lista y comparar un elemento con su siguiente, si vemos que el incial tiene una puntuación menor que el siguiente, podemos asegurar que no está ordenada.
+            # Vamos a recorrer la lista y comparar un elemento con su siguiente, si vemos que el incial tiene una puntuación menor que el siguiente, podemos asegurar que no está ordenada.
+            while loop != len(self.sorted_chefs)-1:
                 if (self.sorted_chefs[loop]).score < (self.sorted_chefs[loop+1]).score:
                     return False
                 loop += 1
