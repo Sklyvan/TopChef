@@ -361,7 +361,6 @@ class TopChef:
         reviews = self.reviews
         dataFile = open(path, "r") # Abrimos el archivo que contiene los Chefs, Recetas y Reviews.
         for fileLine in dataFile: # Recorremos el archivo línea a línea.
-        for fileLine in dataFile: # Recorremos el archivo línea a línea.
             fileLine = fileLine.replace("\n","") # Eliminamos si hay un salto de línea.
             fileContent = fileLine.split("\t") # Separamos los elementos de cada línea mediante la tabulación.
             if fileContent[0] == "CHEF": # Si tenemos un Chef, crearemos un objeto de esa clase con la información que nos ha dado el archivo.
