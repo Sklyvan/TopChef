@@ -361,6 +361,7 @@ class TopChef:
         reviews = self.reviews
         dataFile = open(path, "r") # Abrimos el archivo que contiene los Chefs, Recetas y Reviews.
         for fileLine in dataFile: # Recorremos el archivo línea a línea.
+        for fileLine in dataFile: # Recorremos el archivo línea a línea.
             fileLine = fileLine.replace("\n","") # Eliminamos si hay un salto de línea.
             fileContent = fileLine.split("\t") # Separamos los elementos de cada línea mediante la tabulación.
             if fileContent[0] == "CHEF": # Si tenemos un Chef, crearemos un objeto de esa clase con la información que nos ha dado el archivo.
@@ -418,11 +419,12 @@ class TopChef:
         allReviews = self.reviews
         reviewsIds = allReviews.get_ids()
 
-        for reviewId in reviewsIds: # Recorremos cada review y calculamos su puntuación normalizada, y la substituïmos por la antigua.
+        for reviewId in reviewsIds: # Recorremos cada review y calculamos su puntuación normalizada, y la substituimos por la antigua.
             actualReview = allReviews.get_review(reviewId)
             rawScore = actualReview.score
             normScore = (rawScore - minRawScore) / (maxRawScore - minRawScore)
-            actualReview.score = normScore
+            roundScore = round(normScore, 1)
+            actualReview.score = roundScore
 
 
     def compute_recipes_score(self):
@@ -467,9 +469,11 @@ class TopChef:
                 minRawScore = recipe.score
 
         for recipeId in recipeIds:
-            recipe = self.recipes.get_recipe(recipeId)
-            rawScore = recipe.score
+            actualRecipe = self.recipes.get_recipe(recipeId)
+            rawScore = actualRecipe.score
             normScore = (rawScore - minRawScore) / (maxRawScore - minRawScore)
+            roundScore = round(normScore, 1)
+            actualRecipe.score = roundScore
 
     def compute_chefs_score(self):
         allRecipes = []
@@ -495,6 +499,7 @@ class TopChef:
                 finalScore = normalizedScore / l
                 chef.add_score(finalScore)
 
+        self.normalize_chefs_scores()
 
     def normalize_chefs_scores(self):
         chefIds = self.chefs.get_ids()
@@ -510,6 +515,13 @@ class TopChef:
             except:
                 maxRawScore = chef.score
                 minRawScore = chef.score
+
+        for chefId in chefIds:
+            actualChef = self.chefs.get_chef(chefId)
+            rawScore = actualChef.score
+            normScore = (rawScore - minRawScore) / (maxRawScore - minRawScore)
+            roundScore = round(normScore, 1)
+            actualChef.score = roundScore
 
     def sort_structures(self):
         self.chefs.sort_chefs()
@@ -543,7 +555,7 @@ class TopChef:
     def get_top_n_reviews(self, n=1):
         try:
             if self.reviews.is_sorted():
-                nReviews = self.recipes.get_top_n(n)
+                nReviews = self.reviews.get_top_n(n)
             else:
                 self.sort_structures()
                 nReviews = self.reviews.get_top_n(n)
@@ -557,18 +569,37 @@ class TopChef:
             raise TopChefException
         else:
             for chef in chefs:
-                print(chef)
+                print(str("-") + str(chef))
+                chefId = chef.id
+                recipesIds = self.recipes.get_ids()
+                reviewsIds = self.reviews.get_ids()
+                for recipeId in recipesIds:
+                    recipe = self.recipes.get_recipe(recipeId)
+                    if recipe.chef_id == chefId:
+                        print(str("\t") + str("-") + str(recipe))
+                        checkRecipeId = recipe.id
+                        for reviewId in reviewsIds:
+                            review = self.reviews.get_review(reviewId)
+                            if checkRecipeId == review.recipe_id:
+                                print(str("\t") + str("\t") + str("-") + str(review))
 
     def show_recipes(self, recipes):
         if not recipes:
             raise TopChefException
         else:
             for recipe in recipes:
-                print(recipe)
+                print(str("-") + str(recipe))
+                recipeId = recipe.id
+                reviewsIds = self.reviews.get_ids()
+                for reviewId in reviewsIds:
+                    review = self.reviews.get_review(reviewId)
+                    if review.recipe_id == recipeId:
+                        print(str("\t") + str("-") + str(review))
+
 
     def show_reviews(self, reviews):
         if not reviews:
             raise TopChefException
         else:
             for review in reviews:
-                print(review)
+                print(str("-") + str(review))
