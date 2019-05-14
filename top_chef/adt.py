@@ -356,24 +356,27 @@ class TopChef:
         self.reviews = Reviews()
 
     def load_data(self, path):
-        chefs = self.chefs
-        recipes = self.recipes
-        reviews = self.reviews
-        dataFile = open(path, "r") # Abrimos el archivo que contiene los Chefs, Recetas y Reviews.
-        for fileLine in dataFile: # Recorremos el archivo línea a línea.
-            fileLine = fileLine.replace("\n","") # Eliminamos si hay un salto de línea.
-            fileContent = fileLine.split("\t") # Separamos los elementos de cada línea mediante la tabulación.
-            if fileContent[0] == "CHEF": # Si tenemos un Chef, crearemos un objeto de esa clase con la información que nos ha dado el archivo.
-                chefs.add_chef(fileContent[1], fileContent[2])
-                chefsIds = chefs.get_ids()
-                chefId = chefsIds[-1] # Guardamos la ID de ese chef para asociar luego sus recetas.
-            elif fileContent[0] == "COURSE": # Si tenemos una receta, crearemos un objeto de esa clase con la información que nos ha dado el archivo.
-                recipes.add_recipe(chefId, fileContent[1])
-                recipesIds = recipes.get_ids()
-                recipeId = recipesIds[-1] # Guardamos la ID de esa receta para asociar luego sus reviews.
-            else:
-                reviews.add_review(recipeId, fileContent[0]) # Si no nos indica nada, es una review.
-        dataFile.close()
+        try:
+            chefs = self.chefs
+            recipes = self.recipes
+            reviews = self.reviews
+            dataFile = open(path, "r") # Abrimos el archivo que contiene los Chefs, Recetas y Reviews.
+            for fileLine in dataFile: # Recorremos el archivo línea a línea.
+                fileLine = fileLine.replace("\n","") # Eliminamos si hay un salto de línea.
+                fileContent = fileLine.split("\t") # Separamos los elementos de cada línea mediante la tabulación.
+                if fileContent[0] == "CHEF": # Si tenemos un Chef, crearemos un objeto de esa clase con la información que nos ha dado el archivo.
+                    chefs.add_chef(fileContent[1], fileContent[2])
+                    chefsIds = chefs.get_ids()
+                    chefId = chefsIds[-1] # Guardamos la ID de ese chef para asociar luego sus recetas.
+                elif fileContent[0] == "COURSE": # Si tenemos una receta, crearemos un objeto de esa clase con la información que nos ha dado el archivo.
+                    recipes.add_recipe(chefId, fileContent[1])
+                    recipesIds = recipes.get_ids()
+                    recipeId = recipesIds[-1] # Guardamos la ID de esa receta para asociar luego sus reviews.
+                else:
+                    reviews.add_review(recipeId, fileContent[0]) # Si no nos indica nada, es una review.
+            dataFile.close()
+        except:
+            raise TopChefException ("Wrong data file.")
 
     def clear(self):
         self.chefs = Chefs()
@@ -454,24 +457,10 @@ class TopChef:
 
     def normalize_recipes_scores(self):
         recipeIds = self.recipes.get_ids()
-        maxRawScore = None
-        minRawScore = None
-        for recipeId in recipeIds:
-            recipe = self.recipes.get_recipe(recipeId)
-            try:
-                if recipe.score > maxRawScore:
-                    maxRawScore = recipe.score
-                if recipe.score < minRawScore:
-                    minRawScore = recipe.score
-            except:
-                maxRawScore = recipe.score
-                minRawScore = recipe.score
 
         for recipeId in recipeIds:
             actualRecipe = self.recipes.get_recipe(recipeId)
-            rawScore = actualRecipe.score
-            normScore = (rawScore - minRawScore) / (maxRawScore - minRawScore)
-            roundScore = round(normScore, 1)
+            roundScore = round(actualRecipe.score, 1)
             actualRecipe.score = roundScore
 
     def compute_chefs_score(self):
@@ -501,25 +490,11 @@ class TopChef:
         self.normalize_chefs_scores()
 
     def normalize_chefs_scores(self):
-        chefIds = self.chefs.get_ids()
-        maxRawScore = None
-        minRawScore = None
-        for chefId in chefIds:
-            chef = self.chefs.get_chef(chefId)
-            try:
-                if chef.score > maxRawScore:
-                    maxRawScore = chef.score
-                if chef.score < minRawScore:
-                    minRawScore = chef.score
-            except:
-                maxRawScore = chef.score
-                minRawScore = chef.score
+        chefsIds = self.chefs.get_ids()
 
-        for chefId in chefIds:
+        for chefId in chefsIds:
             actualChef = self.chefs.get_chef(chefId)
-            rawScore = actualChef.score
-            normScore = (rawScore - minRawScore) / (maxRawScore - minRawScore)
-            roundScore = round(normScore, 1)
+            roundScore = round(actualChef.score, 1)
             actualChef.score = roundScore
 
     def sort_structures(self):
@@ -528,44 +503,53 @@ class TopChef:
         self.reviews.sort_reviews()
 
     def get_top_n_chefs(self, n=1):
-        try:
-            if self.chefs.is_sorted():
-                nChefs = self.chefs.get_top_n(n)
-            else:
-                self.sort_structures()
-                nChefs = self.chefs.get_top_n(n)
-            return nChefs
+        if len(self.chefs.chefs) == 0:
+            raise TopChefException ("No loaded data file was found!")
+        else:
+            try:
+                if self.chefs.is_sorted():
+                    nChefs = self.chefs.get_top_n(n)
+                else:
+                    self.sort_structures()
+                    nChefs = self.chefs.get_top_n(n)
+                return nChefs
 
-        except IndexError:
-            return False
+            except IndexError:
+                return False
 
     def get_top_n_recipes(self, n=1):
-        try:
-            if self.recipes.is_sorted():
-                nRecipes = self.recipes.get_top_n(n)
-            else:
-                self.sort_structures()
-                nRecipes = self.recipes.get_top_n(n)
-            return nRecipes
+        if len(self.recipes.recipes) == 0:
+            raise TopChefException ("No loaded data file was found!")
+        else:
+            try:
+                if self.recipes.is_sorted():
+                    nRecipes = self.recipes.get_top_n(n)
+                else:
+                    self.sort_structures()
+                    nRecipes = self.recipes.get_top_n(n)
+                return nRecipes
 
-        except IndexError:
-            return False
+            except IndexError:
+                return False
 
     def get_top_n_reviews(self, n=1):
-        try:
-            if self.reviews.is_sorted():
-                nReviews = self.reviews.get_top_n(n)
-            else:
-                self.sort_structures()
-                nReviews = self.reviews.get_top_n(n)
-            return nReviews
+        if len(self.reviews.reviews) == 0:
+            raise TopChefException ("No loaded data file was found!")
+        else:
+            try:
+                if self.reviews.is_sorted():
+                    nReviews = self.reviews.get_top_n(n)
+                else:
+                    self.sort_structures()
+                    nReviews = self.reviews.get_top_n(n)
+                return nReviews
 
-        except IndexError:
-            return False
+            except IndexError:
+                return False
 
     def show_chefs(self, chefs):
         if not chefs:
-            raise TopChefException
+            raise TopChefException ("There's not enough chefs to show.")
         else:
             for chef in chefs:
                 print(str("-") + str(chef))
@@ -581,10 +565,11 @@ class TopChef:
                             review = self.reviews.get_review(reviewId)
                             if checkRecipeId == review.recipe_id:
                                 print(str("\t") + str("\t") + str("-") + str(review))
+                print(" ")
 
     def show_recipes(self, recipes):
         if not recipes:
-            raise TopChefException
+            raise TopChefException ("There's not enough chefs to show.")
         else:
             for recipe in recipes:
                 print(str("-") + str(recipe))
@@ -594,11 +579,12 @@ class TopChef:
                     review = self.reviews.get_review(reviewId)
                     if review.recipe_id == recipeId:
                         print(str("\t") + str("-") + str(review))
+                print(" ")
 
 
     def show_reviews(self, reviews):
         if not reviews:
-            raise TopChefException
+            raise TopChefException ("There's not enough chefs to show.")
         else:
             for review in reviews:
                 print(str("-") + str(review))
